@@ -1,3 +1,6 @@
+import java.nio.file.Files
+import java.nio.file.Paths
+
 //List all active plugins and save them into a file
 def list_jenkins_plugins(directory, fileName) {
     Files.createDirectories(Paths.get($directory))
