@@ -37,7 +37,7 @@ pipeline {
     post {
         always {
             script {
-                archiveArtifacts "jenkins_auto_update_plugins/plugins_list_*_${DATETIME}.txt"
+                archiveArtifacts "jenkins_auto_update_plugins/plugins_list_*_${DATE_TIME}.txt"
                 if (!(pluginsToReviewManually.isEmpty())) {
                     echo "IMPORTANT!!! The following plugins need to get reviewed and updated manually: ${pluginsToReviewManually}"
                 } else if (!(pluginsDeprecated.isEmpty())) {
