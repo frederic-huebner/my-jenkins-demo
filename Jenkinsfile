@@ -5,10 +5,10 @@ import java.time.format.DateTimeFormatter
 def DATE_TIME = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss_SSS").withZone(ZoneId.of("UTC")).format(Instant.now())
 def pluginsToReviewManually = []
 def pluginsDeprecated = []
-
 pipeline {
     agent any
     options {
+        //Build options
         disableConcurrentBuilds()
         buildDiscarder(
             logRotator (
@@ -26,9 +26,10 @@ pipeline {
         stage('Update_Plugins') {
             steps {
                 script {
-                    list_jenkins_plugins("${WORKSPACE}/jenkins_auto_update_plugins", "plugins_list_BEFORE-UPDATE_${DATE_TIME}.txt")
-(pluginsToReviewManually, pluginsDeprecated) = jenkins_safe_plugins_update()
-                    list_jenkins_plugins("${WORKSPACE}/jenkins_auto_update_plugins", "plugins_list_AFTER-UPDATE_${DATE_TIME}.txt")
+                    def safePluginUpdateModule = load("${WORKSPACE}/jenkins_auto_update_plugins/jenkins-plugins-uptodate.groovy")
+                    safePluginUpdateModule.list_jenkins_plugins("${WORKSPACE}/jenkins_auto_update_plugins", "plugins_list_BEFORE-UPDATE_${DATE_TIME}.txt")
+                    (pluginsToReviewManually, pluginsDeprecated) = safePluginUpdateModule.jenkins_safe_plugins_update()
+                    safePluginUpdateModule.list_jenkins_plugins("${WORKSPACE}/jenkins_auto_update_plugins", "plugins_list_AFTER-UPDATE_${DATE_TIME}.txt")
                 }
             }
         }
@@ -36,7 +37,7 @@ pipeline {
     post {
         always {
             script {
-                archiveArtifacts "jenkins_auto_update_plugins/plugins_list_*_${DATE_TIME}.txt"
+                archiveArtifacts "jenkins_auto_update_plugins/plugins_list_*_${DATETIME}.txt"
                 if (!(pluginsToReviewManually.isEmpty())) {
                     echo "IMPORTANT!!! The following plugins need to get reviewed and updated manually: ${pluginsToReviewManually}"
                 } else if (!(pluginsDeprecated.isEmpty())) {
@@ -48,54 +49,4 @@ pipeline {
             echo "${JOB_BASE_NAME} faild!"
         }
     }
-}
-
-//List all active plugins and save them into a file
-def list_jenkins_plugins(directory, fileName) {
-    sh(script: "touch ${directory}/${fileName}", returnStatus: true)
-    sh("ls -la ${directory}")
-    sh("cat ${directory}/${fileName}")
-    sh("pwd")
-    jenkins.model.Jenkins.instance.pluginManager.activePlugins.findAll {
-        plugin -> writeFile(file: "${directory}/${fileName}", text: "${plugin.getShortName()}:${plugin.getVersion()}\n")
-    }
-}
-
-//Perform jenkins plugin update in a safe manner
-def jenkins_safe_plugins_update() {
-    //Refresh plugins updates list
-    jenkins.model.Jenkins.getInstanceOrNull().getUpdateCenter().getSites().each {
-        site -> site.updateDirectlyNow(hudson.model.DownloadService.signatureCheck)
-    }
-    hudson.model.DownloadService.Downloadable.all().each {
-        downloadable -> downloadable.updateNow();
-    }
-    //Get the list of plugins
-    def pluginsToUpdate = []
-    def pluginsToReviewManually = []
-    def pluginsDeprecated = []
-    jenkins.model.Jenkins.instance.pluginManager.activePlugins.findAll {
-        plugin -> if (!(plugin.getDeprecations().isEmpty())) {
-            pluginsDeprecated.add(plugin.getDisplayName())
-        } else if (plugin.hasUpdate()) {
-            if (plugin.getActiveWarnings().isEmpty()) {
-                pluginsToUpdate.add(plugin.getShortName())
-            }
-            else {
-                pluginsToReviewManually.add(plugin.getDisplayName())
-            }
-        }
-    }
-    println "Plugins to upgrade automatically: ${pluginsToUpdate}"
-    println "Plugins to review and update manually: ${pluginsToReviewManually}"
-    println "Plugins depricated: ${pluginsDeprecated}"
-    long count = 0
-    jenkins.model.Jenkins.instance.pluginManager.install(pluginsToUpdate, false).each {
-        f -> f.get()
-        println "${++count}/${pluginsToUpdate.size()}.."
-    }
-    if (pluginsToUpdate.size() != 0 && count == pluginsToUpdate.size()) {
-        jenkins.model.Jenkins.instance.safeRestart()
-    }
-    return [pluginsToReviewManually, pluginsDeprecated]
 }
