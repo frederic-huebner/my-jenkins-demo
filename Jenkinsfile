@@ -52,7 +52,8 @@ pipeline {
 
 //List all active plugins and save them into a file
 def list_jenkins_plugins(directory, fileName) {
-    File pluginsListFile = new File("$directory/$fileName")
+    writeFile file: "${directory}/${fileName}", text: ""
+    //File pluginsListFile = new File("$directory/$fileName")
     jenkins.model.Jenkins.instance.pluginManager.activePlugins.findAll {
         plugin -> pluginsListFile.append("${plugin.getDisplayName()} (${plugin.getShortName()}): ${plugin.getVersion()}" 
             + System.getProperty("line.separator"))
