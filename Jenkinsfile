@@ -50,3 +50,5 @@ pipeline {
         }
     }
 }
+
+return this
