@@ -44,6 +44,7 @@ pipeline {
                     echo "IMPORTANT!!! The following plugins are deprecated and need to be deleted: ${pluginsDeprecated}"
                 }
             }
+            cleanWs()
         }
         failure {
             echo "${JOB_BASE_NAME} faild!"
