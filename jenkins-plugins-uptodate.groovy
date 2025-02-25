@@ -45,3 +45,5 @@ def jenkins_safe_plugins_update() {
     }
     return [pluginsToReviewManually, pluginsDeprecated]
 }
+
+return this
