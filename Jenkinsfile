@@ -1,6 +1,3 @@
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -55,10 +52,9 @@ pipeline {
 
 //List all active plugins and save them into a file
 def list_jenkins_plugins(directory, fileName) {
-    def pluginsListFile = Files.write(Paths.get(directory, fileName), new byte[0], StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+    sh(script: "touch ${directory}/${fileName}", returnStatus: true)
     jenkins.model.Jenkins.instance.pluginManager.activePlugins.findAll {
-        plugin -> pluginsListFile.append("${plugin.getDisplayName()} (${plugin.getShortName()}): ${plugin.getVersion()}" 
-            + System.getProperty("line.separator"))
+        plugin -> sh(script: "echo ${plugin.getDisplayName()} (${plugin.getShortName()}): ${plugin.getVersion()}\n >> ${directory}/${fileName}", returnStatus: true)
     }
 }
 
