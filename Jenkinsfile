@@ -53,6 +53,8 @@ pipeline {
 //List all active plugins and save them into a file
 def list_jenkins_plugins(directory, fileName) {
     sh(script: "touch ${directory}/${fileName}", returnStatus: true)
+    sh("ls -la ${directory}")
+    sh("cat ${directory}/${fileName}")
     jenkins.model.Jenkins.instance.pluginManager.activePlugins.findAll {
         plugin -> writeFile(file: "${directory}/${fileName}", text: "${plugin.getShortName()}:${plugin.getVersion()}\n")
     }
