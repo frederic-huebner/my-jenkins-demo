@@ -55,6 +55,7 @@ def list_jenkins_plugins(directory, fileName) {
     sh(script: "touch ${directory}/${fileName}", returnStatus: true)
     sh("ls -la ${directory}")
     sh("cat ${directory}/${fileName}")
+    sh("pwd")
     jenkins.model.Jenkins.instance.pluginManager.activePlugins.findAll {
         plugin -> writeFile(file: "${directory}/${fileName}", text: "${plugin.getShortName()}:${plugin.getVersion()}\n")
     }
