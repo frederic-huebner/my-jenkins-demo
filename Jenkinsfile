@@ -54,7 +54,7 @@ pipeline {
 def list_jenkins_plugins(directory, fileName) {
     sh(script: "touch ${directory}/${fileName}", returnStatus: true)
     jenkins.model.Jenkins.instance.pluginManager.activePlugins.findAll {
-        plugin -> println "${plugin.getShortName()}:${plugin.getVersion()}"
+        plugin -> sh(script:"echo '${plugin.getShortName()}:${plugin.getVersion()}\n' >> ${directory}/${fileName}", returnStatus: true)
     }
 }
 
