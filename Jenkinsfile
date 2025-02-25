@@ -7,9 +7,7 @@ def pluginsToReviewManually = []
 def pluginsDeprecated = []
 
 pipeline {
-    agent {
-        label 'master'
-    }
+    agent any
     options {
         disableConcurrentBuilds()
         buildDiscarder(
