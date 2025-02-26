@@ -4,7 +4,7 @@ import java.nio.file.Paths
 //List all active plugins and save them into a file
 def list_jenkins_plugins(directory, fileName) {
     Files.createDirectories(Paths.get(directory))
-    File pluginsListFile = new File("$directory/$fileName")
+    File pluginsListFile = new File("${directory}/${fileName}")
     jenkins.model.Jenkins.instance.pluginManager.activePlugins.findAll {
         plugin -> pluginsListFile.append("${plugin.getShortName()}:${plugin.getVersion()}" 
             + System.getProperty("line.separator"))
